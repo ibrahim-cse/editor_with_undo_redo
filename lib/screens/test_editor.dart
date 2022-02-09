@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui';
 import 'dart:ui' as ui;
@@ -5,24 +6,8 @@ import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_painter/flutter_painter.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
-
-// void main() => runApp(MyApp());
-
-// class MyApp extends StatelessWidget {
-//   const MyApp({Key? key}) : super(key: key);
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     return MaterialApp(
-//       debugShowCheckedModeBanner: false,
-//       title: "Flutter Painter Example",
-//       theme: ThemeData(
-//           primaryColor: Colors.brown, accentColor: Colors.amberAccent),
-//       home: FlutterPainterExample(),
-//     );
-//   }
-// }
 
 class FlutterPainterExample extends StatefulWidget {
   final filePath;
@@ -37,6 +22,7 @@ class _FlutterPainterExampleState extends State<FlutterPainterExample> {
   FocusNode textFocusNode = FocusNode();
   late PainterController controller;
   ui.Image? backgroundImage;
+  // Image? backgroundImage;
   Paint shapePaint = Paint()
     ..strokeWidth = 5
     ..color = Colors.red
@@ -103,14 +89,48 @@ class _FlutterPainterExampleState extends State<FlutterPainterExample> {
   /// Fetches image from an [ImageProvider] (in this example, [NetworkImage])
   /// to use it as a background
   void initBackground() async {
-    // Extension getter (.image) to get [ui.Image] from [ImageProvider]
-    final image = await NetworkImage('https://picsum.photos/1920/1080/').image;
+    // File? imageFile;
+    // Extensiomn getter (.image) to get [ui.Image] from [ImageProvider]
+    final image = await FileImage(File(widget.filePath)).image;
+
+    //TODO:
+    // Future<ui.Image?> getUiImage(String filePath, int height, int width) async {
+    //   final ByteData assetImageByteData =
+    //       await rootBundle.load(widget.filePath);
+    //   final codec = await ui.instantiateImageCodec(
+    //     assetImageByteData.buffer.asUint8List(),
+    //     targetHeight: height,
+    //     targetWidth: width,
+    //   );
+    //   final image = (await codec.getNextFrame()).image;
+    //   setState(() {
+    //     backgroundImage = image;
+    //     controller.background = image.backgroundDrawable;
+    //   });
+    // }
 
     setState(() {
       backgroundImage = image;
       controller.background = image.backgroundDrawable;
     });
   }
+  // Future<ui.Image?> getUiImage(String filePath, int height, int width) async {
+  //   print('filePath');
+  //   print(filePath);
+  //   filePath =
+  //       '/data/user/0/com.example.flutter_editor2/cache/image_picker718832583362830595.jpg';
+  //   final ByteData assetImageByteData = await rootBundle.load(filePath);
+  //   final codec = await ui.instantiateImageCodec(
+  //     assetImageByteData.buffer.asUint8List(),
+  //     targetHeight: height,
+  //     targetWidth: width,
+  //   );
+  //   final image = (await codec.getNextFrame()).image;
+  //   setState(() {
+  //     backgroundImage = image;
+  //     controller.background = image.backgroundDrawable;
+  //   });
+  // }
 
   /// Updates UI when the focus changes
   void onFocus() {
@@ -557,7 +577,7 @@ class _FlutterPainterExampleState extends State<FlutterPainterExample> {
     controller.shapeFactory = factory;
   }
 
-  void renderAndDisplayImage() {
+  Future<void> renderAndDisplayImage() async {
     if (backgroundImage == null) return;
     final backgroundImageSize = Size(
         backgroundImage!.width.toDouble(), backgroundImage!.height.toDouble());
@@ -567,12 +587,15 @@ class _FlutterPainterExampleState extends State<FlutterPainterExample> {
     final imageFuture = controller
         .renderImage(backgroundImageSize)
         .then<Uint8List?>((ui.Image image) => image.pngBytes);
+    print(imageFuture);
 
     // From here, you can write the PNG image data a file or do whatever you want with it
     // For example:
     // ```dart
-    // final file = File('${(await getTemporaryDirectory()).path}/img.png');
-    // await file.writeAsBytes(byteData.buffer.asUint8List(byteData.offsetInBytes, byteData.lengthInBytes));
+    final file = File('${(await getTemporaryDirectory()).path}/img.png');
+    // await file.writeAsBytes(byteData.buffer
+    //     .asUint8List(byteData.offsetInBytes, byteData.lengthInBytes));
+    // await file.writeAsBytes(imageFuture);
     // ```
     // I am going to display it using Image.memory
 
