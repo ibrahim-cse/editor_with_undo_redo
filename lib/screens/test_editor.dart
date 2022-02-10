@@ -21,7 +21,6 @@ class _FlutterPainterExampleState extends State<FlutterPainterExample> {
   FocusNode textFocusNode = FocusNode();
   late PainterController controller;
   ui.Image? backgroundImage;
-  // Image? backgroundImage;
   Paint shapePaint = Paint()
     ..strokeWidth = 5
     ..color = Colors.red
@@ -86,7 +85,6 @@ class _FlutterPainterExampleState extends State<FlutterPainterExample> {
   }
 
   void initBackground() async {
-    // Extension getter (.image) to get [ui.Image] from [ImageProvider]
     final image = await FileImage(File(widget.filePath)).image;
 
     setState(() {
@@ -95,7 +93,7 @@ class _FlutterPainterExampleState extends State<FlutterPainterExample> {
     });
   }
 
-  /// Updates UI when the focus changes
+  // Updates UI when the focus changes
   void onFocus() {
     setState(() {});
   }
