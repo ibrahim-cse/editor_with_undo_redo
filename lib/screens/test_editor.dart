@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_painter/flutter_painter.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
@@ -153,7 +154,8 @@ class _FlutterPainterExampleState extends State<FlutterPainterExample> {
           child: const Icon(
             PhosphorIcons.imageFill,
           ),
-          onPressed: renderAndDisplayImage,
+          // onPressed: renderAndDisplayImage,
+          onPressed: renderAndSaveImage,
         ),
         body: Stack(
           children: [
@@ -545,32 +547,33 @@ class _FlutterPainterExampleState extends State<FlutterPainterExample> {
     controller.shapeFactory = factory;
   }
 
-  Future<void> renderAndDisplayImage() async {
+  void renderAndSaveImage() async {
+    print('renderAndSaveImage method called');
     if (backgroundImage == null) return;
     final backgroundImageSize = Size(
         backgroundImage!.width.toDouble(), backgroundImage!.height.toDouble());
+    print('backgroundImageSize $backgroundImageSize');
 
-    // Render the image
-    // Returns a [ui.Image] object, convert to to byte data and then to Uint8List
-    final imageFuture = controller
-        .renderImage(backgroundImageSize)
-        .then<Uint8List?>((ui.Image image) => image.pngBytes);
-    print(imageFuture);
+    final image = await controller.renderImage(backgroundImageSize);
+    final byteData = await image.pngBytes;
+    print('byteData $byteData');
 
-    // From here, you can write the PNG image data a file or do whatever you want with it
-    // For example:
-    // ```dart
-    final file = File('${(await getTemporaryDirectory()).path}/img.png');
-    // await file.writeAsBytes(byteData.buffer
-    //     .asUint8List(byteData.offsetInBytes, byteData.lengthInBytes));
-    // await file.writeAsBytes(imageFuture);
-    // ```
-    // I am going to display it using Image.memory
+    final extdir = await getExternalStorageDirectories();
+    print('getExternalStorageDirectories ${extdir![0].path}');
 
-    // Show a dialog with the image
-    showDialog(
-        context: context,
-        builder: (context) => RenderedImageDialog(imageFuture: imageFuture));
+    final file = File('${extdir[0].path}/img.png');
+    await file.writeAsBytes(byteData!.buffer
+        .asUint8List(byteData.offsetInBytes, byteData.lengthInBytes));
+
+    Fluttertoast.showToast(
+      msg: 'Image saved successfully',
+      toastLength: Toast.LENGTH_LONG,
+      gravity: ToastGravity.BOTTOM,
+      timeInSecForIosWeb: 1,
+      backgroundColor: Colors.grey,
+      textColor: Colors.white,
+      fontSize: 16.0,
+    );
   }
 
   void removeSelectedDrawable() {
@@ -606,8 +609,9 @@ class RenderedImageDialog extends StatelessWidget {
               child: Center(child: CircularProgressIndicator.adaptive()),
             );
           }
-          if (!snapshot.hasData || snapshot.data == null)
+          if (!snapshot.hasData || snapshot.data == null) {
             return const SizedBox();
+          }
           return InteractiveViewer(
               maxScale: 10, child: Image.memory(snapshot.data!));
         },
